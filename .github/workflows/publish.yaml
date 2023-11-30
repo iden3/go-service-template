@@ -25,7 +25,7 @@ jobs:
         run: |
           ref=$(echo ${{ github.ref }} | cut -d'/' -f3)
           echo "Original ref: $ref"
-          if [[ "$ref" == "main" ]]; then
+          if [[ "$ref" == "master" ]]; then
             echo "::set-output name=tag::latest"
           elif [[ "$ref" == "develop" ]]; then
             echo "::set-output name=tag::develop"

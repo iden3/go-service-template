@@ -3,7 +3,7 @@ name: e2e hardhat tests
 on:
   push:
     branches:
-      - main
+      - master
       - develop
   pull_request:
   workflow_dispatch:
