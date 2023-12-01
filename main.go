@@ -27,15 +27,11 @@ func main() {
 		log.Fatalf("failed to set default logger: %v", err)
 	}
 
-	httpserver, err := newHTTPServer(cfg)
-	if err != nil {
-		logger.WithError(err).Error("failed to start http service")
-	}
-
+	httpserver := newHTTPServer(cfg)
 	newShutdownManager(httpserver).HandleShutdownSignal()
 }
 
-func newHTTPServer(cfg *config.Config) (*httptransport.Server, error) {
+func newHTTPServer(cfg *config.Config) *httptransport.Server {
 	// init handlers
 	systemHandlers := handlers.NewSystemHandler(
 		system.NewReadinessService(),
@@ -58,11 +54,11 @@ func newHTTPServer(cfg *config.Config) (*httptransport.Server, error) {
 		if errors.Is(err, http.ErrServerClosed) {
 			logger.Info("HTTP server closed by request")
 		} else {
-			logger.WithError(err).Error("http server closed with error")
+			logger.WithError(err).Fatal("http server closed with error")
 		}
 	}()
 
-	return httpserver, nil
+	return httpserver
 }
 
 func newShutdownManager(toclose ...shutdown.Shutdown) *shutdown.Manager {
