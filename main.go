@@ -1,13 +1,16 @@
 package main
 
 import (
+	"errors"
 	"log"
+	"net/http"
 
 	"github.com/iden3/go-service-template/config"
 	"github.com/iden3/go-service-template/pkg/logger"
 	httprouter "github.com/iden3/go-service-template/pkg/router/http"
 	"github.com/iden3/go-service-template/pkg/router/http/handlers"
 	"github.com/iden3/go-service-template/pkg/services/system"
+	"github.com/iden3/go-service-template/pkg/shutdown"
 	httptransport "github.com/iden3/go-service-template/pkg/transport/http"
 )
 
@@ -24,13 +27,15 @@ func main() {
 		log.Fatalf("failed to set default logger: %v", err)
 	}
 
-	err = newHTTPServic(cfg)
+	httpserver, err := newHTTPServer(cfg)
 	if err != nil {
 		logger.WithError(err).Error("failed to start http service")
 	}
+
+	newShutdownManager(httpserver).HandleShutdownSignal()
 }
 
-func newHTTPServic(cfg *config.Config) error {
+func newHTTPServer(cfg *config.Config) (*httptransport.Server, error) {
 	// init handlers
 	systemHandlers := handlers.NewSystemHandler(
 		system.NewReadinessService(),
@@ -47,5 +52,23 @@ func newHTTPServic(cfg *config.Config) error {
 	httpserver := httptransport.New(
 		routers,
 	)
-	return httpserver.Start()
+
+	go func() {
+		err := httpserver.Start()
+		if errors.Is(err, http.ErrServerClosed) {
+			logger.Info("HTTP server closed by request")
+		} else {
+			logger.WithError(err).Error("http server closed with error")
+		}
+	}()
+
+	return httpserver, nil
+}
+
+func newShutdownManager(toclose ...shutdown.Shutdown) *shutdown.Manager {
+	m := shutdown.NewManager()
+	for _, s := range toclose {
+		m.Register(s)
+	}
+	return m
 }

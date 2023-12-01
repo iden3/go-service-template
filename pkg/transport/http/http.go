@@ -31,11 +31,11 @@ func New(handler http.Handler, opts ...Option) *Server {
 	return s
 }
 
-func (s *Server) Shotdown(ctx context.Context) error {
+func (s *Server) Shutdown(ctx context.Context) error {
 	return s.driver.Shutdown(ctx)
 }
 
 func (s *Server) Start() error {
-	logger.Info("http server started", slog.String("address", s.driver.Addr))
+	logger.Info("HTTP server started", slog.String("address", s.driver.Addr))
 	return s.driver.ListenAndServe()
 }
