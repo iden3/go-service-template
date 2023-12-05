@@ -1,0 +1,11 @@
+.git
+.github
+
+.dockerignore
+.gitignore
+
+build
+tests
+
+.golangci.yml
+README.md
